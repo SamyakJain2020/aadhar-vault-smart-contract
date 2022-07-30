@@ -32,3 +32,11 @@ contract Lock {
         owner.transfer(address(this).balance);
     }
 }
+// make new file datavault.sol
+// contract two struct 1. struct organisation-> name,id,participants(array of String)
+// create mapping of id => organisation (name as oraganisations)
+// func1 -> register organisation->input name and address and details, assign id store in mapping
+// func2 -> participant registration ->  aadhar no., organisation id
+// func3 -> get list of organisation -> 
+// func4 -> get list of participants in organisation -> input(org id)
+// 

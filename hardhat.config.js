@@ -32,7 +32,7 @@ module.exports = {
   etherscan: {
     // Your API key for Etherscan - matic
     // Obtain one at https://etherscan.io/
-    apiKey: process.env.ETHERSCAN_API
+    apiKey: process.env.POLYGONSCAN_API
   }
   
 };

@@ -85,7 +85,7 @@ contract DataVault {
     }
 
     // organistion active ORGADMIN can add to ORGUSERS to the organisation
-    function addUser(uint256 id, address user)
+    function addOrgUser(uint256 id, address user)
         public
         isAdmin(id)
         returns (bool)
@@ -94,6 +94,18 @@ contract DataVault {
         oraganisations[id].ORGUSERS[user] = Status.ACTIVE;
         oraganisations[id].users.push(user);
         emit UserRegistered(user, users[user].name, users[user].AadharRef);
+        return true;
+    }
+
+    // organistion active ORGADMIN can add to ORGADMINS to the organisation
+    function addOrgAdmin(uint256 id, address admin)
+        public
+        isAdmin(id)
+        returns (bool)
+    {
+        // using modifier to check if user is admin
+        oraganisations[id].ORGADMINS[admin] = Status.ACTIVE;
+        oraganisations[id].admins.push(admin);
         return true;
     }
 
@@ -140,12 +152,16 @@ contract DataVault {
     }
 
     //get all orgusers of an organisation
-    function getOrgUsers(uint256 id) public view returns (address[] memory) {
+    function getAllOrgUsers(uint256 id) public view returns (address[] memory) {
         return oraganisations[id].users;
     }
 
     //get all orgadmins of an organisation
-    function getOrgAdmins(uint256 id) public view returns (address[] memory) {
+    function getAllOrgAdmins(uint256 id)
+        public
+        view
+        returns (address[] memory)
+    {
         return oraganisations[id].admins;
     }
 

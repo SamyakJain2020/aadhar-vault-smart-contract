@@ -47,10 +47,10 @@ contract store{
         return oraganisations[oid];//emit event
     }
 
-    function getlsParticipants(string memory oid) public view returns (string[] memory){
-        // return line
-        return oraganisations[oid].participants;
-    }
+    // function getlsParticipants(string memory oid) public view returns (string[] memory){
+    //     // return line
+    //     return oraganisations[oid].participants;
+    // }
 }
 
 /*

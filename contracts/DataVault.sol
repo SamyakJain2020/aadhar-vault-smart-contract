@@ -85,13 +85,16 @@ contract DataVault {
     }
 
     // organistion active ORGADMIN can add to ORGUSERS to the organisation
-    function addUser(uint256 id, address user) public isAdmin(id) returns (bool) {
-            // using modifier to check if user is admin
-            oraganisations[id].ORGUSERS[user] = Status.ACTIVE;
-            oraganisations[id].users.push(user);
-            emit UserRegistered(user, users[user].name, users[user].AadharRef);
-            return true;
-        
+    function addUser(uint256 id, address user)
+        public
+        isAdmin(id)
+        returns (bool)
+    {
+        // using modifier to check if user is admin
+        oraganisations[id].ORGUSERS[user] = Status.ACTIVE;
+        oraganisations[id].users.push(user);
+        emit UserRegistered(user, users[user].name, users[user].AadharRef);
+        return true;
     }
 
     // Register User with custom Aadhar Reference
@@ -117,7 +120,7 @@ contract DataVault {
         address user = msg.sender;
         users[user].name = name;
         users[user].ad = user;
-        
+
         // TODO BY OM AND SOHAM
         users[user].AadharRef = ""; // to convert address(msg.sender) to string
 
@@ -156,6 +159,12 @@ contract DataVault {
         return usersIds;
     }
 
-    // Function IsUserRegisteredForOrganization
-
+    // Function IsUserRegisteredForOrganization -> Check if the user is registered for the organisation
+    function isUserRegisteredForOrganization(uint256 id, address user)
+        public
+        view
+        returns (bool)
+    {
+        return oraganisations[id].ORGUSERS[user] == Status.ACTIVE;
+    }
 }

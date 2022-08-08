@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 // for Hardhat
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
 //for remix
 // import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Strings.sol";
@@ -13,7 +14,9 @@ enum Status {
     ACTIVE,
     INACTIVE
 }
+
 //  Status = [ACTIVE, INACTIVE]
+
 struct ORG {
     string ORGNAME;
     uint256 ORGID;
@@ -29,7 +32,7 @@ struct user {
     string AadharRef;
 }
 
-contract DataVault {
+contract DataVault is AccessControl{
     mapping(uint256 => ORG) oraganisations;
     uint256[] organisationIds;
 
@@ -133,7 +136,7 @@ contract DataVault {
         users[user].name = name;
         users[user].ad = user;
 
-        // TODO BY OM AND SOHAM
+        // TODO BY @raenyx AND SOHAM
         users[user].AadharRef = ""; // to convert address(msg.sender) to string
 
         usersIds[index] = user;
@@ -183,4 +186,8 @@ contract DataVault {
     {
         return oraganisations[id].ORGUSERS[user] == Status.ACTIVE;
     }
+    
+    //function to set user inactive only done by admin @raenyx @soham
+    //function to set admin inactive Only done by admin (Check if admin is not making himself inactive) @raenyx @soham
+
 }

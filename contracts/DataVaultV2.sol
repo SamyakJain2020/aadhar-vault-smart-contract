@@ -32,7 +32,7 @@ struct user {
     string AadharRef;
 }
 
-contract DataVault is AccessControl{
+contract DataVault is AccessControl {
     mapping(uint256 => ORG) oraganisations;
     uint256[] organisationIds;
 
@@ -44,16 +44,14 @@ contract DataVault is AccessControl{
 
     modifier isAdmin(uint256 id) {
         require(
-            msg.sender == address(this) &&
-                oraganisations[id].ORGADMINS[msg.sender] == Status.ACTIVE,
+            oraganisations[id].ORGADMINS[msg.sender] == Status.ACTIVE,
             "User Not an Active Organisation Admin"
         );
         _;
     }
     modifier isActiveUser(uint256 id) {
         require(
-            msg.sender == address(this) &&
-                oraganisations[id].ORGUSERS[msg.sender] == Status.ACTIVE,
+            oraganisations[id].ORGUSERS[msg.sender] == Status.ACTIVE,
             "User Not an Active Organisation User"
         );
         _;
@@ -186,8 +184,7 @@ contract DataVault is AccessControl{
     {
         return oraganisations[id].ORGUSERS[user] == Status.ACTIVE;
     }
-    
+
     //function to set user inactive only done by admin @raenyx @soham
     //function to set admin inactive Only done by admin (Check if admin is not making himself inactive) @raenyx @soham
-
 }

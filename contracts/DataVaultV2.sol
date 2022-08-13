@@ -32,7 +32,7 @@ struct user {
     string AadharRef;
 }
 
-contract DataVault is AccessControl {
+contract DataVaultV2 is AccessControl {
     mapping(uint256 => ORG) oraganisations;
     uint256[] organisationIds;
 

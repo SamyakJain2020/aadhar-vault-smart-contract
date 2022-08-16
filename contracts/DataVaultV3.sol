@@ -22,7 +22,7 @@ struct AdharHolder{
 
     string AadharNo; 
 }
-contract DataVault {
+contract DataVaultv3 {
     mapping(uint256 => ConsumerAgency) public RegAgencies; // Primary key of struct is the key of this dict
     mapping(address => AdharHolder) public RegAdharHolders;
     uint256 ID;

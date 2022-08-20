@@ -24,7 +24,7 @@ struct ConsumerAgency{
     mapping(address => Status) agency_RegAadhaarStatus;
 }
 
-contract DataVault {
+contract DataVaultV4 {
     uint256 ID; // later to be assigned on server
     string[]  AdharList;
 

@@ -6,48 +6,53 @@ enum Status {
     Absent,
     Present
 }
+struct certificate{
+        uint256 idFrom;
+        uint256 idTo;
+        bool status;
+        address generatedBy;
+}
 
 struct AadhaarHolder {
     address ssi_address;
     string AadhaarHolderName;
     string AadhaarSignature;
-    // string phoneno;
-    // string Address;
-    // string bankAccount1;
     uint256[] subscribedAgencies;
+    string phoneNumber;
+    string residancyAddress;
 }
 
 struct ConsumerAgency {
     uint256 agencyID;
     string agency_name;
     bool ApprovalStatus;
-    // Index :: 0 -> ssi address , 1-> AadharHolderName, 2-> AadharSignature
+    // Index :: 0 -> ssi address , 1-> AadharHolderName, 2-> AadharSignature,3 -> phoneNumber,4 -> address
     uint256[] Permission; // 0: Not granted , 1 : Granted
     address[] AdminList;
+    AadhaarHolder[] RegAadharList;
     uint256 activeAdmincount;
     mapping(address => Status) agency_AdminStatus;
-    AadhaarHolder[] RegAadharList;
     mapping(address => Status) agency_RegAadhaarStatus;
+    mapping(uint256 => address[]) GrantRequests;
 }
 
-contract DataVault1 {
+contract DataVault {
     address public _UIDAI;
     uint256 private ID;
-
-    mapping(uint256 => ConsumerAgency) private RegAgencies;
-    mapping(address => AadhaarHolder) private RegAadhaarHolders;
-
-    event AgencyRegistered(string name, address regAdmin, uint256[] permission);
-    event AadhaarHolderRegistered(
-        address RegAadhaarAddress,
-        string name,
-        string AadharSig
-    );
 
     constructor() {
         ID = 0;
         _UIDAI = msg.sender; // Contract owner
     }
+
+    mapping(uint256 => ConsumerAgency) private RegAgencies;
+    mapping(address => AadhaarHolder) private RegAadhaarHolders;
+    mapping(address=>uint256) private alreadyRegAgency;
+    mapping(uint256 => certificate) Cert;
+    mapping(string=>address) private aadhaarCheck;
+    string[] checkAadhaar; 
+    mapping(uint256 => string) giveName;
+    
 
     //*********************MODIFIERS START***************************
     modifier isAdmin(uint256 id) {
@@ -71,46 +76,8 @@ contract DataVault1 {
 
     //*********************MODIFIERS END***************************
 
-    //*******************ALL REGISTERATION FUNCTIONS START***************************
-    function RegisterNewAadhaarHolder(
-        string memory name,
-        string memory AadharSig
-    ) public returns (bool) {
-        require(
-            RegAadhaarHolders[msg.sender].ssi_address ==
-                0x0000000000000000000000000000000000000000,
-            "User already Exist"
-        );
-        RegAadhaarHolders[msg.sender].AadhaarHolderName = name;
-        RegAadhaarHolders[msg.sender].ssi_address = msg.sender;
-        RegAadhaarHolders[msg.sender].AadhaarSignature = AadharSig;
-        emit AadhaarHolderRegistered(
-            msg.sender,
-            RegAadhaarHolders[msg.sender].AadhaarHolderName, //Can be removed
-            RegAadhaarHolders[msg.sender].AadhaarSignature
-        );
-        return true; // for acknowledment LATTER TO BE REMOVED
-    }
 
-    function RegisterAgency(string memory name, uint256[] memory permission)
-        public
-        returns (uint256)
-    {
-        ID += 1;
-        RegAgencies[ID].agency_name = name;
-        RegAgencies[ID].agencyID = ID;
-        RegAgencies[ID].AdminList.push(msg.sender);
-        RegAgencies[ID].agency_AdminStatus[msg.sender] = Status.Present;
-        RegAgencies[ID].activeAdmincount += 1;
-        RegAgencies[ID].Permission = permission;
-        RegAgencies[ID].ApprovalStatus = false;
-        emit AgencyRegistered(
-            RegAgencies[ID].agency_name,
-            msg.sender,
-            permission
-        );
-        return RegAgencies[ID].agencyID;
-    }
+    //*******************UIDAI FUNCTIONS START***************************
 
     function ApproveAgency(uint256 id, bool status) public returns (bool) {
         require(
@@ -119,7 +86,48 @@ contract DataVault1 {
         );
         RegAgencies[id].ApprovalStatus = status;
         return RegAgencies[id].ApprovalStatus;
-        // add event here
+    }
+    //*******************UIDAI FUNCTIONS START***************************
+
+
+    //*******************ALL REGISTERATION FUNCTIONS START***************************
+    function RegisterNewAadhaarHolder(
+        string memory name,
+        string memory AadharSig,
+        string memory phoneNumber,
+        string memory residancyAddress
+
+    ) public {
+        require(
+            RegAadhaarHolders[msg.sender].ssi_address ==
+                0x0000000000000000000000000000000000000000,
+            "User already Exist"
+        );
+        RegAadhaarHolders[msg.sender].AadhaarHolderName = name;
+        RegAadhaarHolders[msg.sender].ssi_address = msg.sender;
+        RegAadhaarHolders[msg.sender].AadhaarSignature = AadharSig;
+        RegAadhaarHolders[msg.sender].phoneNumber = phoneNumber;
+        RegAadhaarHolders[msg.sender].residancyAddress = residancyAddress;
+        aadhaarCheck[AadharSig]=msg.sender;
+        checkAadhaar.push(AadharSig);
+    }
+
+    function RegisterAgency(string memory name, uint256 govtId,uint256[] memory permission)
+        public
+        returns (uint256)
+    {
+        require(alreadyRegAgency[msg.sender]==0,"already register");
+        ID += 1;
+        RegAgencies[ID].agency_name = name;
+        RegAgencies[ID].agencyID = govtId;
+        RegAgencies[ID].AdminList.push(msg.sender);
+        RegAgencies[ID].agency_AdminStatus[msg.sender] = Status.Present;
+        RegAgencies[ID].activeAdmincount += 1;
+        RegAgencies[ID].Permission = permission;
+        RegAgencies[ID].ApprovalStatus = false;
+        alreadyRegAgency[msg.sender] = ID;
+        giveName[ID] = name;
+        return RegAgencies[ID].agencyID;
     }
 
     function RegisterAadhaarInAgency(
@@ -130,7 +138,6 @@ contract DataVault1 {
         isAdmin(id)
         isAadharHolderAlreadyRegister(AadharHolderWalletAddress)
     {
-        //Aadhaar holder registration
         require(
             RegAgencies[id].agency_RegAadhaarStatus[
                 AadharHolderWalletAddress
@@ -140,27 +147,42 @@ contract DataVault1 {
         RegAgencies[id].agency_RegAadhaarStatus[
             AadharHolderWalletAddress
         ] = Status.Present;
+
         RegAgencies[id].RegAadharList.push(
-            RegAadhaarHolders[AadharHolderWalletAddress]
+        RegAadhaarHolders[AadharHolderWalletAddress]
         );
+
+        
         RegAadhaarHolders[AadharHolderWalletAddress].subscribedAgencies.push(
             id
         );
     }
+    
 
     //*******************ALL REGISTERATION FUNCTIONS END***************************
 
+
     //*******************ALL RETRIVAL FUNCTIONS START***************************
 
-    // 1. To retrieve user data and reveal only specific fields.
-    // 2. To retrieve entire user data only when that user fires request to reveal their own data
-    // 3. To provide knowledge of which agency is accessing which data field to the user
-    // 4. to get details of all registerd aadhaar users in agency
+    function giveAadhaar()public view returns (string[] memory){
+        return checkAadhaar;
+    }
+
+    // function getAllRegisteredAgencyName()public view returns(uint256[] memory,string[] memory){
+    //     uint256[] memory idarray = new uint256[](ID + 1);
+    //     string[] memory namearray = new string[](ID + 1);
+    //     for (uint256 i = 1; i <= ID; i += 1) {
+    //         idarray[i] = i;
+    //         namearray[i] = RegAgencies[i].agency_name;
+    //     }
+    //     return(idarray,namearray);
+    // }
+
+    //function getAllAgencyDetails() public view returns
 
     function getAadharHolderData(uint256 id, address AadharHolderWalletAddress)
         public
         view
-        isAdmin(id)
         returns (AadhaarHolder memory)
     {
         AadhaarHolder memory response;
@@ -178,12 +200,22 @@ contract DataVault1 {
                 AadharHolderWalletAddress
             ].AadhaarSignature;
         }
+        if (RegAgencies[id].Permission[3] == 1) {
+            response.phoneNumber = RegAadhaarHolders[
+                AadharHolderWalletAddress
+            ].phoneNumber;
+        }
+        if (RegAgencies[id].Permission[4] == 1) {
+            response.residancyAddress = RegAadhaarHolders[
+                AadharHolderWalletAddress
+            ].residancyAddress;
+        }
         return response;
     }
-    function getAadharHolderData(uint256 id) public view isAdmin(id) returns (AadhaarHolder[] memory) {
+    function getAadharHolderData(uint256 id) internal view  returns (AadhaarHolder[] memory) {
         AadhaarHolder[] memory response = new AadhaarHolder[](RegAgencies[id].RegAadharList.length);
         for (uint256 i = 0; i < RegAgencies[id].RegAadharList.length; i++) {
-            response[i] = getAadharHolderData(id, RegAgencies[id].RegAadharList[i].ssi_address);
+            response[i] = getAadharHolderData(id, RegAgencies[id].RegAadharList[i].ssi_address);  
                  }
         return response;
     }
@@ -222,61 +254,28 @@ contract DataVault1 {
             string[] memory,
             bool[] memory,
             uint256[][] memory,
-            address[][] memory
+            address[][] memory,
+            AadhaarHolder[][] memory,
+            uint256[] memory
         )
     {
-        require(
-            msg.sender == _UIDAI,
-            "Only UIDAI can submit the approval Status"
-        );
         uint256[] memory array = new uint256[](ID + 1);
         string[] memory array1 = new string[](ID + 1);
         bool[] memory array2 = new bool[](ID + 1);
         uint256[][] memory array3 = new uint256[][](ID + 1);
         address[][] memory array4 = new address[][](ID + 1);
+        AadhaarHolder[][] memory array5 = new AadhaarHolder[][](ID + 1);
+        uint256[] memory array6 = new uint256[](ID + 1);
         for (uint256 i = 1; i <= ID; i += 1) {
-            array[i] = RegAgencies[i].agencyID;
+            array[i] = i;
             array1[i] = RegAgencies[i].agency_name;
             array2[i] = RegAgencies[i].ApprovalStatus;
             array3[i] = RegAgencies[i].Permission;
             array4[i] = RegAgencies[i].AdminList;
+            array6[i] = RegAgencies[i].agencyID;
         }
-        return (array, array1, array2, array3, array4);
+        return (array, array1, array2, array3, array4,array5,array6);
     }
-
-    //TODO Incomplete
-    // function getAllAgencyAdminStatus() public view returns (Status[][] memory) {
-    //     require(
-    //         msg.sender == _UIDAI,
-    //         "Only UIDAI can submit the approval Status"
-    //     );
-    //     Status[][] memory array = new Status[][](ID + 1);
-    //     for (uint256 i = 1; i <= ID; i += 1) {
-    //         for (uint256 j = 0; j < RegAgencies[i].AdminList.length; j += 1) {
-    //             array[i][j] = RegAgencies[i].agency_AdminStatus[
-    //                 RegAgencies[i].AdminList[j]
-    //             ];
-    //         }
-    //     }
-    //     return array;
-    // }
-
-    // function getAllAgencyRegAadhaarStatus()
-    //     public
-    //     view
-    //     returns (uint256[][] memory)
-    // {
-    //     require(
-    //         msg.sender == _UIDAI,
-    //         "Only UIDAI can submit the approval Status"
-    //     );
-    //     uint256[][] memory array = new uint256[][](ID + 1);
-    //     for (uint256 i = 1; i <= ID; i += 1) {
-    //         // array[i] = RegAgencies[i].agency_RegAadhaarStatus[ msg.sender ];????
-    //     }
-    //     return array;
-    // }
-
     
     function getAllAgencyRegAadhaarCount()
         public

@@ -19,7 +19,7 @@ module.exports = {
     }, 
     maticmumbai: {
       url: process.env.POLYGON_ALCHEMY,
-      accounts: [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2, process.env.PRIVATE_KEY_3],
+      accounts: [process.env.PRIVATE_KEY_1],
       // blockGasLimit: 518379120000 // whatever you want here
 
     }
